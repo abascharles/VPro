@@ -15,7 +15,7 @@ from core.frame_manager import FrameManager
 from .export_dialog import GifExportDialog
 
 class VideoWidget(QLabel):
-    """Custom video display widget"""
+    """Custom video display widget (original design)"""
     
     # Signal to communicate with main window
     file_dropped = pyqtSignal(str)
@@ -166,7 +166,7 @@ class ModernSlider(QSlider):
         """)
 
 class ControlsWidget(QWidget):
-    """Auto-hiding controls overlay"""
+    """Controls widget (always visible)"""
     
     play_pause_clicked = pyqtSignal()
     stop_clicked = pyqtSignal()
@@ -186,7 +186,6 @@ class ControlsWidget(QWidget):
         self.seek_timer.timeout.connect(self.perform_delayed_seek)
         self.pending_seek_position = 0
         self.setup_ui()
-        self.setup_animations()
         
     def setup_ui(self):
         # Main layout
@@ -266,11 +265,17 @@ class ControlsWidget(QWidget):
         
         # Volume controls
         self.volume_btn = ModernButton("🔊", size=42)
+        self.volume_btn.clicked.connect(self.toggle_mute)  # Add mute functionality
+        
         self.volume_slider = ModernSlider()
         self.volume_slider.setMaximum(100)
-        self.volume_slider.setValue(70)
+        self.volume_slider.setValue(70)  # Default volume
         self.volume_slider.setFixedWidth(120)  # Slightly wider
-        self.volume_slider.valueChanged.connect(self.volume_changed.emit)
+        self.volume_slider.valueChanged.connect(self.on_volume_changed)
+        
+        # Store original volume for mute/unmute
+        self.previous_volume = 70
+        self.is_muted = False
         
         right_controls.addWidget(self.volume_btn)
         right_controls.addWidget(self.volume_slider)
@@ -308,29 +313,11 @@ class ControlsWidget(QWidget):
         
         self.setLayout(layout)
         
-        # Set initial opacity
+        # Set initial background to transparent (like original overlay)
         self.setStyleSheet("background-color: transparent;")
         
         # Initialize export button as disabled
         self.update_export_button(False)
-        
-    def setup_animations(self):
-        """Setup fade in/out animations"""
-        self.fade_animation = QPropertyAnimation(self, b"windowOpacity")
-        self.fade_animation.setDuration(300)
-        self.fade_animation.setEasingCurve(QEasingCurve.Type.OutCubic)
-        
-    def show_controls(self):
-        """Fade in controls"""
-        self.fade_animation.setStartValue(0.0)
-        self.fade_animation.setEndValue(1.0)
-        self.fade_animation.start()
-        
-    def hide_controls(self):
-        """Fade out controls"""
-        self.fade_animation.setStartValue(1.0)
-        self.fade_animation.setEndValue(0.0)
-        self.fade_animation.start()
         
     def toggle_play_pause(self):
         """Toggle play/pause state"""
@@ -353,6 +340,40 @@ class ControlsWidget(QWidget):
         """Handle GIF export button click"""
         print("GIF export button clicked")  # Debug
         self.export_gif_requested.emit()
+        
+    def toggle_mute(self):
+        """Toggle mute/unmute"""
+        if self.is_muted:
+            # Unmute - restore previous volume
+            self.volume_slider.setValue(self.previous_volume)
+            self.volume_btn.setText("🔊")
+            self.is_muted = False
+        else:
+            # Mute - save current volume and set to 0
+            self.previous_volume = self.volume_slider.value()
+            self.volume_slider.setValue(0)
+            self.volume_btn.setText("🔇")
+            self.is_muted = True
+            
+    def on_volume_changed(self, volume):
+        """Handle volume slider changes"""
+        # Update mute button icon based on volume level
+        if volume == 0:
+            self.volume_btn.setText("🔇")
+            self.is_muted = True
+        elif volume < 50:
+            self.volume_btn.setText("🔉")
+            self.is_muted = False
+        else:
+            self.volume_btn.setText("🔊")
+            self.is_muted = False
+            
+        # If volume is changed manually, update previous volume for mute
+        if not self.is_muted:
+            self.previous_volume = volume
+            
+        # Emit signal to video player
+        self.volume_changed.emit(volume)
         
     def update_export_button(self, enabled=True):
         """Update export button state"""
@@ -447,7 +468,6 @@ class MainWindow(QMainWindow):
         self.current_video_path = None
         self.setup_video_engine()
         self.setup_ui()
-        self.setup_auto_hide()
         self.connect_signals()
         
     def setup_video_engine(self):
@@ -492,7 +512,7 @@ class MainWindow(QMainWindow):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Video container
+        # Video container (like original)
         self.video_container = QWidget()
         self.video_container.setStyleSheet("background-color: #000000;")
         container_layout = QVBoxLayout(self.video_container)
@@ -502,11 +522,11 @@ class MainWindow(QMainWindow):
         self.video_widget = VideoWidget()
         container_layout.addWidget(self.video_widget)
         
-        # Connect video widget signals immediately after creation
+        # Connect video widget signals
         self.video_widget.file_dropped.connect(self.on_file_dropped)
         print("Video widget signals connected")  # Debug
         
-        # Controls overlay - positioned as overlay
+        # Controls overlay - positioned as overlay (like original)
         self.controls = ControlsWidget()
         self.controls.setParent(self.video_container)
         
@@ -553,21 +573,6 @@ class MainWindow(QMainWindow):
         exit_action = file_menu.addAction("Exit")
         exit_action.triggered.connect(self.close)
         
-    def setup_auto_hide(self):
-        """Setup auto-hide timer for controls"""
-        self.hide_timer = QTimer()
-        self.hide_timer.setSingleShot(True)
-        self.hide_timer.timeout.connect(self.controls.hide_controls)
-        
-        # Show controls initially
-        self.controls.show_controls()
-        
-        # Initialize export button state
-        self.controls.update_export_button(False)
-        
-        # Start hide timer
-        self.hide_timer.start(3000)  # Hide after 3 seconds
-        
     def connect_signals(self):
         """Connect all signals"""
         # Video player signals
@@ -583,6 +588,7 @@ class MainWindow(QMainWindow):
         self.controls.seek_requested.connect(self.video_player.seek_to_position)
         self.controls.frame_step_requested.connect(self.on_frame_step)
         self.controls.export_gif_requested.connect(self.open_gif_export_dialog)
+        self.controls.volume_changed.connect(self.video_player.set_volume)  # Connect volume control
         
         # Debug: Print when signals are connected
         print("All signals connected successfully")
@@ -668,12 +674,6 @@ class MainWindow(QMainWindow):
         super().resizeEvent(event)
         # Reposition controls when window is resized
         QTimer.singleShot(10, self.position_controls)
-        
-    def mouseMoveEvent(self, event):
-        """Show controls on mouse movement"""
-        super().mouseMoveEvent(event)
-        self.controls.show_controls()
-        self.hide_timer.start(3000)  # Reset hide timer
         
     def open_file(self):
         """Open video file dialog"""

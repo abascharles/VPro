@@ -1,8 +1,9 @@
-# GUI Framework
+# GUI Framework (includes multimedia support)
 PyQt6==6.7.0
 PyQt6-Qt6==6.7.0
+# Note: Multimedia support is included in PyQt6 6.2+ (no separate package needed)
 
-# Video Processing
+# Video Processing (optimized versions for large files)
 opencv-python==4.8.1.78
 moviepy==1.0.3
 imageio==2.31.1
@@ -15,14 +16,17 @@ numpy==1.24.3
 # File Handling
 send2trash==1.8.2
 
-# Performance
+# Performance (helps with large file processing)
 numba==0.57.1
 
-# Packaging
+# Packaging for executable creation
 pyinstaller==5.13.0
 auto-py-to-exe==2.38.0
 
-# Development
+# Development and Testing
 pytest==7.4.0
 black==23.7.0
 flake8==6.0.0
+
+# Additional dependencies for better large file support
+psutil==5.9.5  # For memory monitoring (optional)

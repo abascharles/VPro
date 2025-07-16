@@ -2,13 +2,14 @@
 
 import cv2
 import numpy as np
-from PyQt6.QtCore import QThread, pyqtSignal, QTimer, QMutex
+from PyQt6.QtCore import QThread, pyqtSignal, QTimer, QMutex, QUrl
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtGui import QImage, QPixmap
 import time
 import os
 
 class VideoPlayerEngine(QThread):
-    """Core video playback engine using OpenCV"""
+    """Core video playback engine using OpenCV for video + QMediaPlayer for audio"""
     
     # Signals
     frame_ready = pyqtSignal(np.ndarray)  # Emit frame data
@@ -19,6 +20,8 @@ class VideoPlayerEngine(QThread):
     
     def __init__(self):
         super().__init__()
+        
+        # OpenCV for video (like original)
         self.video_capture = None
         self.is_playing = False
         self.is_paused = False
@@ -29,6 +32,16 @@ class VideoPlayerEngine(QThread):
         self.video_path = None
         self.seek_to_frame = -1
         self.mutex = QMutex()
+        
+        # QMediaPlayer ONLY for audio
+        self.media_player = QMediaPlayer()
+        self.audio_output = QAudioOutput()
+        self.media_player.setAudioOutput(self.audio_output)
+        
+        # Connect audio player signals
+        self.media_player.durationChanged.connect(self.on_audio_duration_changed)
+        self.media_player.mediaStatusChanged.connect(self.on_audio_status_changed)
+        self.media_player.errorOccurred.connect(self.on_audio_error)
         
     def load_video(self, video_path):
         """Load a video file"""
@@ -41,7 +54,7 @@ class VideoPlayerEngine(QThread):
             if self.video_capture:
                 self.video_capture.release()
                 
-            # Open new video
+            # Open new video with OpenCV (like original)
             self.video_capture = cv2.VideoCapture(video_path)
             
             if not self.video_capture.isOpened():
@@ -61,10 +74,15 @@ class VideoPlayerEngine(QThread):
             self.video_path = video_path
             self.current_frame = 0
             
+            # Load audio separately
+            media_url = QUrl.fromLocalFile(os.path.abspath(video_path))
+            self.media_player.setSource(media_url)
+            self.audio_output.setVolume(0.7)  # 70% volume
+            
             # Emit video properties
             self.duration_changed.emit(duration_ms)
             
-            # Load first frame
+            # Load first frame (like original)
             ret, frame = self.video_capture.read()
             if ret:
                 self.frame_ready.emit(frame)
@@ -81,18 +99,25 @@ class VideoPlayerEngine(QThread):
             self.is_playing = True
             self.is_paused = False
             
+            # Start audio
+            self.media_player.play()
+            
             if not self.isRunning():
                 self.start()
     
     def pause(self):
         """Pause video playback"""
         self.is_paused = True
+        self.media_player.pause()
         
     def stop(self):
         """Stop video playback"""
         self.is_playing = False
         self.is_paused = False
         self.current_frame = 0
+        
+        # Stop audio
+        self.media_player.stop()
         
         if self.video_capture:
             self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, 0)
@@ -115,7 +140,10 @@ class VideoPlayerEngine(QThread):
         
         print(f"Target frame: {target_frame}")  # Debug
         
-        # Immediately seek and emit frame
+        # Sync audio
+        self.media_player.setPosition(position_ms)
+        
+        # Immediately seek and emit frame (like original)
         self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, target_frame)
         self.current_frame = target_frame
         
@@ -147,7 +175,13 @@ class VideoPlayerEngine(QThread):
         
         frame_number = max(0, min(frame_number, self.total_frames - 1))
         
-        # Immediately seek and emit frame
+        # Calculate position for audio sync
+        position_ms = int((frame_number / self.fps) * 1000)
+        
+        # Sync audio
+        self.media_player.setPosition(position_ms)
+        
+        # Immediately seek and emit frame (like original)
         self.video_capture.set(cv2.CAP_PROP_POS_FRAMES, frame_number)
         self.current_frame = frame_number
         
@@ -180,6 +214,10 @@ class VideoPlayerEngine(QThread):
         if self.current_frame > 0:
             self.seek_to_frame_number(self.current_frame - 1)
             
+    def set_volume(self, volume):
+        """Set audio volume (0-100)"""
+        self.audio_output.setVolume(volume / 100.0)
+            
     def get_current_time_ms(self):
         """Get current playback time in milliseconds"""
         return int((self.current_frame / self.fps) * 1000)
@@ -209,7 +247,7 @@ class VideoPlayerEngine(QThread):
         }
     
     def run(self):
-        """Main playback loop"""
+        """Main playback loop (like original)"""
         last_frame_time = time.time()
         
         while self.is_playing and self.video_capture and self.video_capture.isOpened():
@@ -222,6 +260,10 @@ class VideoPlayerEngine(QThread):
                 self.current_frame = self.seek_to_frame
                 self.seek_to_frame = -1
                 last_frame_time = current_time
+                
+                # Sync audio position
+                audio_position_ms = int((self.current_frame / self.fps) * 1000)
+                self.media_player.setPosition(audio_position_ms)
             self.mutex.unlock()
             
             # Skip frame timing if paused
@@ -257,10 +299,30 @@ class VideoPlayerEngine(QThread):
             # Small sleep to prevent high CPU usage
             self.msleep(1)
     
+    # Audio player signal handlers
+    def on_audio_duration_changed(self, duration_ms):
+        """Handle audio duration changed"""
+        # We use video duration, not audio duration
+        pass
+        
+    def on_audio_status_changed(self, status):
+        """Handle audio status changes"""
+        if status == QMediaPlayer.MediaStatus.EndOfMedia:
+            # Audio ended - stop video too
+            if self.is_playing:
+                self.playback_finished.emit()
+                self.is_playing = False
+                
+    def on_audio_error(self, error, error_string):
+        """Handle audio player errors"""
+        print(f"Audio error: {error_string}")  # Just log, don't fail video
+    
     def cleanup(self):
         """Clean up resources"""
         self.is_playing = False
         self.wait()  # Wait for thread to finish
+        
+        self.media_player.stop()
         
         if self.video_capture:
             self.video_capture.release()

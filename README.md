@@ -1,190 +1,105 @@
-# VideoPlayerPro
+# VideoPlayerPro 🎬
 
-An advanced video player application with frame-by-frame navigation, timeline preview, and GIF export capabilities.
+A professional video player with frame-by-frame navigation, audio support, and GIF export capabilities.
 
-## Features
+## ✨ Features
 
-- **Frame-by-Frame Navigation**: Navigate through videos frame by frame with precision
-- **Timeline with Thumbnail Preview**: Interactive timeline showing video progress with thumbnail previews
-- **GIF Export**: Export video segments as optimized GIF files
-- **Drag & Drop Support**: Easy file loading with drag and drop functionality
-- **Custom Video Controls**: Professional playback controls with volume adjustment
-- **Multiple Video Formats**: Support for MP4, AVI, MOV, MKV, and more
-- **Optimized Performance**: Efficient video processing and playback
+- **🎵 Audio + Video Playback** - Synchronized audio and video with volume controls
+- **🔍 Frame-by-Frame Navigation** - Precise frame stepping with forward/backward buttons
+- **🎯 Real-Time Seeking** - Drag progress bar for instant seeking
+- **📤 GIF Export** - Export video segments as high-quality GIFs
+- **📁 Drag & Drop** - Simply drag video files into the player
+- **🎨 Modern UI** - Clean, professional interface with floating controls
+- **💪 Large File Support** - Optimized for videos up to 1GB+
 
-## Requirements
+## 🎮 How to Use
 
-- Python 3.7 or higher
-- PyQt5
-- OpenCV
-- Pillow (PIL)
-- NumPy
+### Loading Videos
 
-## Installation
+- **Drag & Drop:** Drag any video file into the player window
+- **Click to Open:** Click the video area to browse for files
+- **Menu:** Use File → Open Video
 
-1. Clone the repository:
+### Controls
 
-```bash
-git clone https://github.com/videoplayer/VideoPlayerPro.git
-cd VideoPlayerPro
-```
-
-2. Install dependencies:
-
-```bash
-pip install -r requirements.txt
-```
-
-3. Run the application:
-
-```bash
-python main.py
-```
-
-## Building from Source
-
-To build the application for distribution:
-
-```bash
-python setup.py build
-```
-
-To create a distributable package:
-
-```bash
-python setup.py sdist bdist_wheel
-```
-
-## Usage
-
-### Basic Usage
-
-1. Launch the application by running `python main.py`
-2. Open a video file using File → Open Video... or drag and drop a video file
-3. Use the playback controls to play, pause, or stop the video
-4. Use the timeline to navigate through the video
-5. Use arrow keys for frame-by-frame navigation
-
-### Frame-by-Frame Navigation
-
-- **Right Arrow**: Step forward one frame
-- **Left Arrow**: Step backward one frame
-- **Space**: Toggle play/pause
+- **▶️ Play/Pause:** Start or pause video playback
+- **⏹️ Stop:** Stop playback and return to beginning
+- **⏮️ Previous Frame:** Step back one frame
+- **⏭️ Next Frame:** Step forward one frame
+- **🔊 Volume:** Control audio volume or mute
+- **🎯 Progress Bar:** Drag to seek to any position
+- **GIF Button:** Export current segment as GIF
 
 ### GIF Export
 
-1. Load a video file
-2. Go to File → Export GIF...
-3. Set the start and end time for the segment
-4. Configure export settings (size, frame rate, quality)
-5. Choose output location and click Export
+1. Load your video
+2. Navigate to desired start position
+3. Click the **GIF** button
+4. Set start/end times, quality, and size
+5. Click **Export GIF**
 
-### Keyboard Shortcuts
+## 📋 Supported Formats
 
-- **Ctrl+O**: Open video file
-- **Ctrl+E**: Export GIF
-- **Ctrl+Q**: Quit application
-- **Space**: Play/Pause
-- **Left Arrow**: Previous frame
-- **Right Arrow**: Next frame
+**Video:** MP4, AVI, MKV, MOV, WMV, FLV, WEBM, GIF  
+**Audio:** Most common audio codecs (MP3, AAC, AC3, etc.)
 
-## Project Structure
+## 🔧 Tips for Best Performance
 
-```
-VideoPlayerPro/
-├── main.py                     # Application entry point
-├── requirements.txt            # Dependencies
-├── setup.py                   # Installation script
-├── README.md                  # Documentation
-├── assets/                    # Icons, images, styles
-│   ├── icons/
-│   └── styles/
-├── src/                       # Source code
-│   ├── __init__.py
-│   ├── app.py                 # Main application class
-│   ├── gui/                   # GUI components
-│   │   ├── __init__.py
-│   │   ├── main_window.py     # Main player window
-│   │   ├── video_widget.py    # Custom video display widget
-│   │   ├── controls.py        # Playback controls
-│   │   ├── timeline.py        # Progress bar with thumbnail preview
-│   │   └── export_dialog.py   # GIF export dialog
-│   ├── core/                  # Core functionality
-│   │   ├── __init__.py
-│   │   ├── video_player.py    # Video playback engine
-│   │   ├── frame_manager.py   # Frame-by-frame navigation
-│   │   └── gif_exporter.py    # GIF creation and export
-│   └── utils/                 # Utilities
-│       ├── __init__.py
-│       ├── file_handler.py    # File operations and drag & drop
-│       └── helpers.py         # Helper functions
-├── tests/                     # Unit tests
-├── build/                     # Build artifacts (auto-generated)
-└── dist/                      # Distribution files (auto-generated)
-```
+### Large Files (>500MB)
 
-## Development
+- Allow extra time for initial loading
+- Use frame stepping for precise navigation
+- Consider smaller export sizes for GIF creation
 
-### Setting up Development Environment
+### Frame-by-Frame Editing
 
-1. Clone the repository
-2. Create a virtual environment:
+- Use ⏮️/⏭️ buttons for single frame navigation
+- Drag progress bar for quick positioning
+- Export specific segments as GIFs for sharing
 
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-```
+## 🖱️ Keyboard Shortcuts
 
-3. Install development dependencies:
+Currently optimized for mouse/touch interaction. All functions available via on-screen controls.
 
-```bash
-pip install -r requirements.txt
-```
+## 🐛 Troubleshooting
 
-### Running Tests
+### Video won't load
 
-```bash
-pytest tests/
-```
+- Check if file format is supported
+- Ensure file isn't corrupted or in use by another program
+- Try copying file to local drive if on network storage
 
-### Code Formatting
+### Audio not playing
 
-```bash
-black src/
-flake8 src/
-```
+- Check volume is not muted (🔇 icon)
+- Some video files may not contain audio tracks
+- Player will continue with video-only if audio codec unsupported
 
-## Contributing
+### Large file is slow
 
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Run tests and ensure they pass
-6. Submit a pull request
+- This is normal for files >500MB
+- Allow time for initial loading
+- Use frame stepping instead of rapid seeking
 
-## License
+### GIF export takes long time
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Large time ranges take longer to process
+- Reduce output size or duration for faster export
+- Higher quality settings increase processing time
 
-## Support
+## 💡 Pro Tips
 
-For support, please open an issue on the GitHub repository or contact support@videoplayer.pro.
+1. **Precise Editing:** Use frame stepping to find exact moments
+2. **Quick Previews:** Export short GIF segments to preview edits
+3. **Large Files:** Let large videos fully load before intensive navigation
+4. **Quality vs Size:** Balance GIF quality settings for your needs
 
-## Changelog
+## 📞 Support
 
-### Version 1.0.0
+- Supports videos up to 1GB+ in size
+- Optimized for modern systems with 4GB+ RAM
+- Works on Windows 10/11, macOS 10.14+, Linux
 
-- Initial release
-- Frame-by-frame navigation
-- Timeline with thumbnail preview
-- GIF export functionality
-- Drag & drop support
-- Multiple video format support
+---
 
-## Acknowledgments
-
-- Built with PyQt5 for the GUI framework
-- OpenCV for video processing
-- Pillow for image manipulation
-- NumPy for numerical operations
+**VideoPlayerPro** - Professional video playback with frame-perfect control 🎯
