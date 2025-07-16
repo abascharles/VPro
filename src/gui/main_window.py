@@ -457,7 +457,12 @@ class MainWindow(QMainWindow):
         
     def setup_ui(self):
         self.setWindowTitle("VideoPlayerPro")
-        self.setMinimumSize(1000, 600)
+        # Set better default size
+        self.setMinimumSize(1200, 700)
+        self.resize(1400, 800)
+        
+        # Center the window on screen
+        self.center_window()
         
         # Apply dark theme
         self.setStyleSheet("""
@@ -501,16 +506,37 @@ class MainWindow(QMainWindow):
         self.video_widget.file_dropped.connect(self.on_file_dropped)
         print("Video widget signals connected")  # Debug
         
-        # Controls overlay
+        # Controls overlay - positioned as overlay
         self.controls = ControlsWidget()
         self.controls.setParent(self.video_container)
-        # Make sure controls don't block mouse events to video widget
-        self.controls.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, False)
         
         layout.addWidget(self.video_container)
         
         # Setup menu bar
         self.setup_menubar()
+        
+        # Position controls after UI is set up
+        QTimer.singleShot(100, self.position_controls)
+        
+    def center_window(self):
+        """Center the window on screen"""
+        screen = QApplication.primaryScreen().geometry()
+        size = self.geometry()
+        x = (screen.width() - size.width()) // 2
+        y = (screen.height() - size.height()) // 2
+        self.move(x, y)
+        
+    def position_controls(self):
+        """Position controls at bottom of video container"""
+        if hasattr(self, 'controls') and hasattr(self, 'video_container'):
+            # Get container size
+            container_size = self.video_container.size()
+            
+            # Set controls to full width and height of container
+            self.controls.resize(container_size)
+            
+            # Position at (0,0) - controls will position themselves at bottom
+            self.controls.move(0, 0)
         
     def setup_menubar(self):
         """Setup modern menu bar"""
@@ -557,8 +583,6 @@ class MainWindow(QMainWindow):
         self.controls.seek_requested.connect(self.video_player.seek_to_position)
         self.controls.frame_step_requested.connect(self.on_frame_step)
         self.controls.export_gif_requested.connect(self.open_gif_export_dialog)
-        
-        # Note: Video widget signals are connected in setup_ui immediately after creation
         
         # Debug: Print when signals are connected
         print("All signals connected successfully")
@@ -642,8 +666,8 @@ class MainWindow(QMainWindow):
     def resizeEvent(self, event):
         """Handle window resize"""
         super().resizeEvent(event)
-        # Resize controls overlay to match video container
-        self.controls.resize(self.video_container.size())
+        # Reposition controls when window is resized
+        QTimer.singleShot(10, self.position_controls)
         
     def mouseMoveEvent(self, event):
         """Show controls on mouse movement"""
