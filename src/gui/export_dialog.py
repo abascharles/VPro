@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
                              QComboBox, QCheckBox, QGridLayout)
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal
 from PyQt6.QtGui import QFont, QPixmap
-from core.gif_exporter import GifExporter
+from src.core.gif_exporter import GifExporter
 
 class ModernGroupBox(QGroupBox):
     """Modern styled group box"""

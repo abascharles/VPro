@@ -10,8 +10,8 @@ from PyQt6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve, pyqtSigna
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QPainter, QColor, QPen, QBrush
 
 # Import our video engine
-from core.video_player import VideoPlayerEngine
-from core.frame_manager import FrameManager
+from src.core.video_player import VideoPlayerEngine
+from src.core.frame_manager import FrameManager
 from .export_dialog import GifExportDialog
 
 class VideoWidget(QLabel):

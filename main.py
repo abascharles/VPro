@@ -8,7 +8,13 @@ from PyQt6.QtCore import Qt
 # Add src to path so we can import our modules
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'src'))
 
-from gui.main_window import MainWindow
+# Use the correct import paths for PyInstaller
+try:
+    # Try the src.gui path first (for PyInstaller)
+    from src.gui.main_window import MainWindow
+except ImportError:
+    # Fallback to gui path (for development)
+    from gui.main_window import MainWindow
 
 def main():
     """Main application entry point"""
